@@ -1,0 +1,8 @@
+<pl.fejku.model.SiteList>
+  <siteList>
+    <pl.fejku.model.Site>
+      <name>MangaGo</name>
+      <address>http://www.mangago.me/list/directory/all/1/</address>
+    </pl.fejku.model.Site>
+  </siteList>
+</pl.fejku.model.SiteList>
