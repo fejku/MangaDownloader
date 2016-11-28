@@ -1,6 +1,8 @@
 package pl.fejku;
 
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -338,7 +341,16 @@ public class MangaDownloader extends JFrame {
 	}
 	
 	private void initComponents() {
-		pnlGlowny = new JPanel();
+		pnlGlowny = new JPanel() 
+			{
+				final Image image = new ImageIcon("./images/butterflies.jpg").getImage();
+				@Override
+				  protected void paintComponent(Graphics g) {
+
+				    super.paintComponent(g);
+				        g.drawImage(image, 0, 0, null);
+				}
+		};
 		pnlGlowny.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(pnlGlowny);
 		pnlGlowny.setLayout(null);
@@ -359,6 +371,7 @@ public class MangaDownloader extends JFrame {
 		scrlPnlSite.setViewportView(listSite);
 		
 		btnPobierzMangii = new JButton("Pobierz mangii");
+		btnPobierzMangii.setContentAreaFilled(false);
 		btnPobierzMangii.setFont(new Font("Tahoma", Font.PLAIN, 10));
 		btnPobierzMangii.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -373,6 +386,7 @@ public class MangaDownloader extends JFrame {
 		pnlGlowny.add(progressBar);
 		
 		btnDodajStrone = new JButton("Dodaj now\u0105 stron\u0119");
+		btnDodajStrone.setContentAreaFilled(false);
 		btnDodajStrone.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JOptionPane.showMessageDialog(null, "To ci¹gle wersja beta ;)");
@@ -384,6 +398,8 @@ public class MangaDownloader extends JFrame {
 
 		scrlPnlManga = new JScrollPane();
 		scrlPnlManga.setBounds(152, 45, 300, 450);
+		scrlPnlManga.setOpaque(false);
+		scrlPnlManga.getViewport().setOpaque(false);
 		pnlGlowny.add(scrlPnlManga);
 		
 		tabManga = new JTable();
@@ -399,13 +415,18 @@ public class MangaDownloader extends JFrame {
 		tabManga.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		tabManga.setFillsViewportHeight(true);
 		tabManga.setTableHeader(null);
-		tabManga.setDefaultRenderer(Manga.class, new MangaDownloaderTableCellRenderer());
+		tabManga.setDefaultRenderer(Manga.class, new MangaDownloaderTableCellRenderer() 
+			{{ setOpaque(false); }}
+		);
 		tabManga.setShowGrid(false);		
 		mangaTableModel = new MangaTableModel();
 		tabManga.setModel(mangaTableModel);
 		sorter = new TableRowSorter(mangaTableModel);
 		tabManga.setRowSorter(sorter);
-		scrlPnlManga.setViewportView(tabManga);
+	    tabManga.setOpaque(false);	
+	    scrlPnlManga.setViewportView(tabManga);
+	    
+	    
 		
 		txtFilterManga = new JTextField();
 		txtFilterManga.getDocument().addDocumentListener(
@@ -431,6 +452,8 @@ public class MangaDownloader extends JFrame {
 		
 		scrPnlChapter = new JScrollPane();
 		scrPnlChapter.setBounds(461, 45, 313, 481);
+		scrPnlChapter.setOpaque(false);
+		scrPnlChapter.getViewport().setOpaque(false);
 		pnlGlowny.add(scrPnlChapter);
 		
 		tabChapter = new JTable();
@@ -466,8 +489,11 @@ public class MangaDownloader extends JFrame {
 		tabChapter.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		tabChapter.setFillsViewportHeight(true);
 		tabChapter.setTableHeader(null);
-		tabChapter.setDefaultRenderer(Chapter.class, new MangaDownloaderTableCellRenderer());
+		tabChapter.setDefaultRenderer(Chapter.class, new MangaDownloaderTableCellRenderer()
+			{{ setOpaque(false); }}
+		);
 		tabChapter.setShowGrid(false);
+		tabChapter.setOpaque(false);
 		scrPnlChapter.setViewportView(tabChapter);
 	}
 	

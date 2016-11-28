@@ -11,7 +11,7 @@ public class MangaDownloaderListCellRenderer extends DefaultListCellRenderer {
 		super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 		if (value instanceof MangaDownloaderElement) {
 			MangaDownloaderElement mangaDownloaderElement = (MangaDownloaderElement) value;
-			setText(mangaDownloaderElement.getName());
+			setText("<html>"+mangaDownloaderElement.getArg()+mangaDownloaderElement.getName()+"</html>");
 		}
 		return this;
 	}

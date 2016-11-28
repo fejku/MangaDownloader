@@ -3,6 +3,7 @@
     <pl.fejku.model.Site>
       <name>MangaGo</name>
       <address>http://www.mangago.me/list/directory/all/1/</address>
+	  <arg></arg>
     </pl.fejku.model.Site>
   </siteList>
 </pl.fejku.model.SiteList>
