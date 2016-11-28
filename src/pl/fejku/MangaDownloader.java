@@ -16,7 +16,6 @@ import java.util.List;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -28,6 +27,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
 import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
@@ -72,6 +73,9 @@ public class MangaDownloader extends JFrame {
 	private JScrollPane scrPnlChapter;
 	private JTable tabChapter;
 	
+	private MangaTableModel mangaTableModel;
+	private TableRowSorter sorter;
+	
 	private void enabelAllControls(boolean enable) {
 		listSite.setEnabled(enable);
 		btnDodajStrone.setEnabled(enable);
@@ -80,20 +84,29 @@ public class MangaDownloader extends JFrame {
 	}
 	
 	private void pickSite(MouseEvent e) {
-		if (!listSite.isSelectionEmpty()) {
-			btnPobierzMangii.setEnabled(true);
-		}
 		if (e.getClickCount() == 2) {
+			if (!listSite.isSelectionEmpty()) {
+				btnPobierzMangii.setEnabled(true);
+			}
 			fillMangaList();
 		}
 	}
 	
-	private void doPickChapter() {
+	private void newMangaTabFilter()
+	{	    
+	    sorter.setRowFilter(new RowFilter<TableModel,Integer>() {
+		    @Override
+		    public boolean include(RowFilter.Entry<? extends TableModel,? extends Integer> row) {
+		        Manga manga = (Manga)row.getValue(0);
+		        return manga.getName().toLowerCase().startsWith(txtFilterManga.getText().toLowerCase());
+		    }
+		});
+	}
+	
+	
+	private void doPickChapter(int row, int column) {
 		
 		SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
-			
-			int row = tabChapter.getSelectedRow();
-			int column = tabChapter.getSelectedColumn();
 			int pageNr = 0;
 			
 			@Override
@@ -155,7 +168,6 @@ public class MangaDownloader extends JFrame {
 	
 	private void doPickManga() {		
 		Manga manga = (Manga)tabManga.getValueAt(tabManga.convertRowIndexToModel(tabManga.getSelectedRow()), 0);
-		System.out.println(manga.getLink());
 		ChapterList chapterList = new ChapterList();
 		
 		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
@@ -177,7 +189,8 @@ public class MangaDownloader extends JFrame {
 	}
 	
 	private void doPobierzMangii() {	
-	
+		btnPobierzMangii.setEnabled(false);
+		
 		SwingWorker<Void, Integer> worker = new SwingWorker<Void, Integer>() {
 			int pagesCount;
 			XStream xStream;
@@ -192,21 +205,45 @@ public class MangaDownloader extends JFrame {
 				pagesCount = pagesOption.size();
 				progressBar.setMaximum(pagesCount - 1);
 				
-				for(int i = 0; i < (pagesCount - 1); i++) {
-					Element pageOption = pagesOption.get(i);
-					//System.out.println("Page " + pagesCount + ": " +pageOption.attr("value"));					
+				for(Element pageOption : pagesOption) {
+					SwingWorker<Void, Void> insidePageWorker = new SwingWorker<Void, Void>() {
+						
+						@Override
+						protected Void doInBackground() throws Exception {
+							Elements mangaLinks = Util.getDoc(pageOption.attr("value")).select(".title a");
+							for(Element mangaLink : mangaLinks) {
+								Manga manga = new Manga();
+								manga.setName(mangaLink.text());
+								manga.setLink(mangaLink.attr("href"));
+								
+								mangaList.add(manga);
+								publish(null);
+							}							
+							return null;
+						}
+
+						@Override
+						protected void process(List<Void> chunks) {
+							
+						}
+						
+						
+					};	
 					
-					Elements mangaLinks = Util.getDoc(pageOption.attr("value")).select(".title a");
-					for(Element mangaLink : mangaLinks) {
-						Manga manga = new Manga();
-						manga.setName(mangaLink.text());
-						manga.setLink(mangaLink.attr("href"));
-						
-						mangaList.add(manga);
-						
-						//System.out.println("Manga name: " + mangaLink.text() + ", link:" + mangaLink.attr("href") + "/n");
-					}
-					publish(i);
+					
+					
+					
+//					Element pageOption = pagesOption.get(i);					
+//					
+//					Elements mangaLinks = Util.getDoc(pageOption.attr("value")).select(".title a");
+//					for(Element mangaLink : mangaLinks) {
+//						Manga manga = new Manga();
+//						manga.setName(mangaLink.text());
+//						manga.setLink(mangaLink.attr("href"));
+//						
+//						mangaList.add(manga);
+//					}
+//					publish(i);
 				}
 				
 				return null;
@@ -222,122 +259,26 @@ public class MangaDownloader extends JFrame {
 
 			@Override
 			protected void done() {
-				Util.clearProgress(progressBar);
-				
-				xStream = new XStream();
-				try {
-					xStream.toXML(mangaList, new FileWriter(mangaListXMLFile));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				DefaultListModel<MangaDownloaderElement> mangaListModel = new DefaultListModel<>();
-				for(Manga manga : mangaList.getMangaList()) {
-					mangaListModel.addElement(manga);
-				}
-				fillMangaList();
+//				Util.clearProgress(progressBar);
+//				
+//				xStream = new XStream();
+//				try {
+//					xStream.toXML(mangaList, new FileWriter(mangaListXMLFile));
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				
+//				DefaultListModel<MangaDownloaderElement> mangaListModel = new DefaultListModel<>();
+//				for(Manga manga : mangaList.getMangaList()) {
+//					mangaListModel.addElement(manga);
+//				}
+//				fillMangaList();
 			}		
-			
-			
 		};
 		worker.execute();
 	}
 	
-	private void initComponents() {
-		pnlGlowny = new JPanel();
-		pnlGlowny.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(pnlGlowny);
-		pnlGlowny.setLayout(null);
-		
-		scrlPnlSite = new JScrollPane();
-		scrlPnlSite.setBounds(10, 45, 132, 181);
-		pnlGlowny.add(scrlPnlSite);
-		
-		listSite = new JList();
-		listSite.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				pickSite(e);
-			}
-		});
-		listSite.setFont(new Font("Tahoma", Font.PLAIN, 10));
-		listSite.setCellRenderer(new MangaDownloaderListCellRenderer());
-		scrlPnlSite.setViewportView(listSite);
-		
-		btnPobierzMangii = new JButton("Pobierz mangii");
-		btnPobierzMangii.setFont(new Font("Tahoma", Font.PLAIN, 10));
-		btnPobierzMangii.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				doPobierzMangii();
-			}
-		});
-		btnPobierzMangii.setBounds(152, 11, 200, 23);
-		pnlGlowny.add(btnPobierzMangii);
-		
-		progressBar = new JProgressBar();
-		progressBar.setBounds(0, 237, 784, 25);
-		pnlGlowny.add(progressBar);
-		
-		btnDodajStrone = new JButton("Dodaj now\u0105 stron\u0119");
-		btnDodajStrone.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(null, "To ci¹gle wersja beta ;)");
-			}
-		});
-		btnDodajStrone.setFont(new Font("Tahoma", Font.PLAIN, 10));
-		btnDodajStrone.setBounds(10, 11, 132, 23);
-		pnlGlowny.add(btnDodajStrone);
-
-		scrlPnlManga = new JScrollPane();
-		scrlPnlManga.setBounds(152, 45, 200, 150);
-		pnlGlowny.add(scrlPnlManga);
-		
-		tabManga = new JTable();
-		tabManga.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2) {
-					doPickManga();	
-				}
-			}
-		});
-		tabManga.setFont(new Font("Tahoma", Font.PLAIN, 10));
-		tabManga.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		tabManga.setFillsViewportHeight(true);
-		tabManga.setTableHeader(null);
-		tabManga.setDefaultRenderer(Manga.class, new MangaDownloaderTableCellRenderer());
-		tabManga.setShowGrid(false);
-		
-		scrlPnlManga.setViewportView(tabManga);
-		
-		txtFilterManga = new JTextField();
-		txtFilterManga.setBounds(152, 206, 200, 20);
-		pnlGlowny.add(txtFilterManga);
-		txtFilterManga.setColumns(10);
-		
-		scrPnlChapter = new JScrollPane();
-		scrPnlChapter.setBounds(362, 45, 200, 181);
-		pnlGlowny.add(scrPnlChapter);
-		
-		tabChapter = new JTable();
-		tabChapter.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(e.getClickCount()==2) {
-					doPickChapter();
-				}
-			}
-		});
-		tabChapter.setFont(new Font("Tahoma", Font.PLAIN, 10));
-		tabChapter.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		tabChapter.setFillsViewportHeight(true);
-		tabChapter.setTableHeader(null);
-		tabChapter.setDefaultRenderer(Chapter.class, new MangaDownloaderTableCellRenderer());
-		tabChapter.setShowGrid(false);
-		scrPnlChapter.setViewportView(tabChapter);
-	}
-
 	public void fillMangaList () {
 		XStream xStream = new XStream();
 		MangaList mangaList;
@@ -347,11 +288,12 @@ public class MangaDownloader extends JFrame {
 		try {
 			mangaList = (MangaList)xStream.fromXML(new FileReader(mangaListXMLFile));
 		} catch (FileNotFoundException e) {
-			//File with mangaList wasn't found, it's OK.
+			//PRZENIESC to z catch do if-a
+			doPobierzMangii();
 			return;
 		}
 		
-		tabManga.setModel(new MangaTableModel(mangaList.getMangaList()));
+		mangaTableModel.setMangaList(mangaList.getMangaList());
 		
 		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
 			DefaultListModel<MangaDownloaderElement> mangaListModel;
@@ -368,6 +310,7 @@ public class MangaDownloader extends JFrame {
 			@Override
 			protected void done() {
 				Util.clearProgress(progressBar);
+				btnPobierzMangii.setEnabled(true);
 			}					
 		};
 		worker.execute();
@@ -409,118 +352,142 @@ public class MangaDownloader extends JFrame {
 		worker.execute();
 	}
 	
+	private void initComponents() {
+		pnlGlowny = new JPanel();
+		pnlGlowny.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(pnlGlowny);
+		pnlGlowny.setLayout(null);
+		
+		scrlPnlSite = new JScrollPane();
+		scrlPnlSite.setBounds(10, 45, 132, 481);
+		pnlGlowny.add(scrlPnlSite);
+		
+		listSite = new JList();
+		listSite.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				pickSite(e);
+			}
+		});
+		listSite.setFont(new Font("Tahoma", Font.PLAIN, 10));
+		listSite.setCellRenderer(new MangaDownloaderListCellRenderer());
+		scrlPnlSite.setViewportView(listSite);
+		
+		btnPobierzMangii = new JButton("Pobierz mangii");
+		btnPobierzMangii.setFont(new Font("Tahoma", Font.PLAIN, 10));
+		btnPobierzMangii.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				doPobierzMangii();
+			}
+		});
+		btnPobierzMangii.setBounds(152, 11, 300, 23);
+		pnlGlowny.add(btnPobierzMangii);
+		
+		progressBar = new JProgressBar();
+		progressBar.setBounds(0, 537, 784, 25);
+		pnlGlowny.add(progressBar);
+		
+		btnDodajStrone = new JButton("Dodaj now\u0105 stron\u0119");
+		btnDodajStrone.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(null, "To ci¹gle wersja beta ;)");
+			}
+		});
+		btnDodajStrone.setFont(new Font("Tahoma", Font.PLAIN, 10));
+		btnDodajStrone.setBounds(10, 11, 132, 23);
+		pnlGlowny.add(btnDodajStrone);
+
+		scrlPnlManga = new JScrollPane();
+		scrlPnlManga.setBounds(152, 45, 300, 450);
+		pnlGlowny.add(scrlPnlManga);
+		
+		tabManga = new JTable();
+		tabManga.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					doPickManga();	
+				}
+			}
+		});
+		tabManga.setFont(new Font("Tahoma", Font.PLAIN, 10));
+		tabManga.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		tabManga.setFillsViewportHeight(true);
+		tabManga.setTableHeader(null);
+		tabManga.setDefaultRenderer(Manga.class, new MangaDownloaderTableCellRenderer());
+		tabManga.setShowGrid(false);		
+		mangaTableModel = new MangaTableModel();
+		tabManga.setModel(mangaTableModel);
+		sorter = new TableRowSorter(mangaTableModel);
+		tabManga.setRowSorter(sorter);
+		scrlPnlManga.setViewportView(tabManga);
+		
+		txtFilterManga = new JTextField();
+		txtFilterManga.getDocument().addDocumentListener(
+				   new DocumentListener()
+				   {
+					@Override
+					public void insertUpdate(DocumentEvent e) {
+						newMangaTabFilter();	
+					}
+					@Override
+					public void removeUpdate(DocumentEvent e) {
+						newMangaTabFilter();
+					}
+					@Override
+					public void changedUpdate(DocumentEvent e) {
+						newMangaTabFilter();						
+					}
+				   }
+				);
+		txtFilterManga.setBounds(152, 506, 300, 20);
+		pnlGlowny.add(txtFilterManga);
+		txtFilterManga.setColumns(10);
+		
+		scrPnlChapter = new JScrollPane();
+		scrPnlChapter.setBounds(461, 45, 313, 481);
+		pnlGlowny.add(scrPnlChapter);
+		
+		tabChapter = new JTable();
+		tabChapter.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					for(int selectedChapterNr : tabChapter.getSelectedRows()){
+						SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+
+							@Override
+							protected Void doInBackground() throws Exception {
+								doPickChapter(selectedChapterNr, 0);
+								return null;
+							}
+							
+						};
+						worker.execute();
+					}
+					
+				}
+			}
+		});
+		tabChapter.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(e.getClickCount()==2) {
+					doPickChapter(tabChapter.getSelectedRow(), tabChapter.getSelectedColumn());
+				}
+			}
+		});
+		tabChapter.setFont(new Font("Tahoma", Font.PLAIN, 10));
+		tabChapter.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		tabChapter.setFillsViewportHeight(true);
+		tabChapter.setTableHeader(null);
+		tabChapter.setDefaultRenderer(Chapter.class, new MangaDownloaderTableCellRenderer());
+		tabChapter.setShowGrid(false);
+		scrPnlChapter.setViewportView(tabChapter);
+	}
+	
 	public MangaDownloader() {		
 		initComponents();	
 		initSites();
-//		
-//		mangaAddress = new JTextField();
-//		mangaAddress.setText("http://www.mangago.me/read-manga/royal_servant/");
-//		mangaAddress.setBounds(89, 11, 233, 20);
-//		contentPane.add(mangaAddress);
-//		mangaAddress.setColumns(10);
-//		
-//		JLabel lblAdresMangi = new JLabel("Adres mangi:");
-//		lblAdresMangi.setBounds(10, 14, 69, 14);
-//		contentPane.add(lblAdresMangi);
-//		
-//		JScrollPane scrollPane = new JScrollPane();
-//		scrollPane.setBounds(209, 42, 132, 165);
-//		contentPane.add(scrollPane);		
-//		
-//		JPanel panel = new JPanel();
-//		panel.setBounds(0, 232, 434, 30);
-//		contentPane.add(panel);
-//		panel.setLayout(null);
-//		
-//		JLabel lblMessage = new JLabel("");
-//		lblMessage.setBounds(10, 9, 414, 12);
-//		panel.add(lblMessage);
-//		
-//		JList list = new JList();
-//		list.setFont(UIManager.getFont("TextField.font"));		
-//		list.setCellRenderer(new MangaDownloaderListCellRenderer());
-//		
-//		list.addMouseListener(new MouseAdapter() {
-//		    public void mouseClicked(MouseEvent evt) {
-//		        JList list = (JList)evt.getSource();
-//		        System.out.println(evt.getClickCount());
-//		        if (evt.getClickCount() == 2) {	
-//		        	Util.changeLabel(lblMessage, Color.BLUE, "Proszê czekaæ trwa pobieranie.");					
-//					Chapter chapter = (Chapter)list.getSelectedValue();
-//					boolean isFirstPage = true;
-//					for(Page page: chapter.getPages()) {
-//						String mangaName = mangaAddress.getText().split("/")[4];
-//						mangaName = mangaName.replaceAll("_", " ");
-//						String path = mangaName + "/" + chapter.getName();
-//						path = path.replaceAll("[^a-zA-Z0-9- ]", "");
-//						path = StringUtils.capitalize(path);
-//						//Pierwsza strona
-//						if (isFirstPage) {
-//							//Nie utworzono folderu bo ju¿ istnieje
-//							if (Util.createFolders(path) == false) {
-//								lblMessage.setForeground(Color.RED);
-//								lblMessage.setText("Pobrano ju¿ ten chapter.");
-//								return;
-//							}
-//							isFirstPage = false;
-//						}
-//						String fileExtansion = page.getImageUrl().substring(page.getImageUrl().lastIndexOf("."));
-//						String fileName = page.getPageNr() + fileExtansion;
-//						Thread thread = new Thread(new SavingFile(path, fileName, page.getImageUrl()));
-//						thread.start();
-//						//Util.saveFile(path, fileName, page.getImageUrl());
-//					}
-//					Util.changeLabel(lblMessage, new Color(45, 172, 70), "Pobrano!");
-//		        }
-//		    }
-//		});
-//		
-//		scrollPane.setViewportView(list);
-//		
-//		JButton btnPobierz = new JButton("Pobierz");
-//		btnPobierz.addActionListener(new ActionListener() {
-//			public void actionPerformed(ActionEvent e) {
-//				Util.changeLabel(lblMessage, Color.BLUE, "Pobieram chaptery");
-//				test();
-//				setGui(lblMessage, list);			
-//			} 
-//		});
-//		btnPobierz.setBounds(344, 10, 80, 23);
-//		contentPane.add(btnPobierz);
-	}
-	
-	public void test(String link) {
-//		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-//			
-//			@Override
-//			protected Void doInBackground() throws Exception {
-//				
-//				Elements chapterLinks = Util.getDoc(link).select("#chapter_table a");
-//				for(Element chapterLink: chapterLinks) {
-//					chapters.add(new Chapter(chapterLink.text(), chapterLink.attr("href")));
-//				}
-//				
-//				
-//				return null;
-//			}
-//		};
-	}
-	
-	public void setGui(JLabel lbl, JList list) {
-//		
-//		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {			
-//			@Override
-//			protected Void doInBackground() throws Exception {
-//				return null;
-//			}
-//			
-//			@Override
-//			protected void done() {
-//				MangaGo mangaGo = new MangaGo();
-//				Manga manga = mangaGo.getManga(mangaAddress.getText());
-//				manga.downloadChapters(lbl, list);
-//			}
-//		};
-//		worker.execute();			
 	}
 }

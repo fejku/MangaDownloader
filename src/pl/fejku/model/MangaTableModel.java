@@ -1,6 +1,7 @@
 package pl.fejku.model;
 
 import java.awt.print.Book;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
@@ -10,12 +11,17 @@ public class MangaTableModel extends AbstractTableModel {
 	List<Manga> mangaList;
 	
     private String[] headerList = { "Nazwa mangii" };
-    private Class[] classes = { Manga.class };
+    private Class[] classes = { Manga.class };    
     
-    public MangaTableModel(List<Manga> list) {
-    	mangaList = list;
-    }
-    
+	public MangaTableModel() {
+		mangaList = new ArrayList<>();
+	}
+
+	public void setMangaList(List<Manga> mangaList) {
+		this.mangaList = mangaList;
+		fireTableDataChanged();
+	}
+
 	public List<Manga> getMangaList() {
 		return mangaList;
 	}

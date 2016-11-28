@@ -14,7 +14,7 @@ public class Main {
 					final MangaDownloader mangaDownloader = new MangaDownloader();
 					mangaDownloader.setIconImage(new ImageIcon("./images/icon.png").getImage());
 					mangaDownloader.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-					mangaDownloader.setBounds(100, 100, 800, 300);
+					mangaDownloader.setBounds(100, 100, 800, 600);
 					mangaDownloader.setTitle("MangaDownloader");
 					mangaDownloader.setVisible(true);
 				} catch (Exception e) {
