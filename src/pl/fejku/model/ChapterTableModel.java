@@ -29,7 +29,6 @@ public class ChapterTableModel extends AbstractTableModel {
 	}
 		
 
-	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 		chapterList.get(rowIndex).setArg((String)aValue);
 		fireTableCellUpdated(rowIndex, columnIndex);

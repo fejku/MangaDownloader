@@ -167,7 +167,7 @@ public class MangaDownloader extends JFrame {
 	}
 	
 	private void doPickManga() {		
-		Manga manga = (Manga)tabManga.getValueAt(tabManga.convertRowIndexToModel(tabManga.getSelectedRow()), 0);
+		Manga manga = (Manga)tabManga.getValueAt(tabManga.getSelectedRow(), 0);
 		ChapterList chapterList = new ChapterList();
 		
 		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
@@ -188,11 +188,18 @@ public class MangaDownloader extends JFrame {
 		worker.execute();
 	}
 	
-	private void doPobierzMangii() {	
+	private void doPobierzMangii() {
+		int row = tabManga.getSelectedRow();
+		int column = tabManga.getSelectedColumn();
+		
+//		tabManga.getModel().setValueAt("<font color=#54af54><b>OK</b></font> ", 
+//				row, column);
+		
 		btnPobierzMangii.setEnabled(false);
 		
 		SwingWorker<Void, Integer> worker = new SwingWorker<Void, Integer>() {
 			int pagesCount;
+			int downloadedPageAmount;
 			XStream xStream;
 			MangaList mangaList = new MangaList();
 			
@@ -206,7 +213,7 @@ public class MangaDownloader extends JFrame {
 				progressBar.setMaximum(pagesCount - 1);
 				
 				for(Element pageOption : pagesOption) {
-					SwingWorker<Void, Void> insidePageWorker = new SwingWorker<Void, Void>() {
+					SwingWorker<Void, String> insidePageWorker = new SwingWorker<Void, String>() {
 						
 						@Override
 						protected Void doInBackground() throws Exception {
@@ -216,65 +223,43 @@ public class MangaDownloader extends JFrame {
 								manga.setName(mangaLink.text());
 								manga.setLink(mangaLink.attr("href"));
 								
-								mangaList.add(manga);
-								publish(null);
-							}							
+								mangaList.add(manga);								
+							}						
+							publish("");
 							return null;
 						}
 
 						@Override
-						protected void process(List<Void> chunks) {
-							
+						protected void process(List<String> chunks) {
+							downloadedPageAmount += chunks.size();
+							System.out.println(downloadedPageAmount+"/"+pagesCount);
 						}
-						
-						
+
+						@Override
+						protected void done() {
+							if (downloadedPageAmount == pagesCount) {
+								Util.clearProgress(progressBar);
+								
+								xStream = new XStream();
+								try {
+									xStream.toXML(mangaList, new FileWriter(mangaListXMLFile));
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								
+								DefaultListModel<MangaDownloaderElement> mangaListModel = new DefaultListModel<>();
+								for(Manga manga : mangaList.getMangaList()) {
+									mangaListModel.addElement(manga);
+								}
+								fillMangaList();
+							}
+						}
 					};	
-					
-					
-					
-					
-//					Element pageOption = pagesOption.get(i);					
-//					
-//					Elements mangaLinks = Util.getDoc(pageOption.attr("value")).select(".title a");
-//					for(Element mangaLink : mangaLinks) {
-//						Manga manga = new Manga();
-//						manga.setName(mangaLink.text());
-//						manga.setLink(mangaLink.attr("href"));
-//						
-//						mangaList.add(manga);
-//					}
-//					publish(i);
-				}
-				
+					insidePageWorker.execute();
+				}				
 				return null;
-			}
-
-			@Override
-			protected void process(List<Integer> chunks) {
-				int lastDownloadedPageNr = chunks.get(chunks.size() - 1);
-				Util.setProgressTextValue(progressBar, 
-						"(" + lastDownloadedPageNr + "/" + pagesCount + ")", 
-						lastDownloadedPageNr);
-			}
-
-			@Override
-			protected void done() {
-//				Util.clearProgress(progressBar);
-//				
-//				xStream = new XStream();
-//				try {
-//					xStream.toXML(mangaList, new FileWriter(mangaListXMLFile));
-//				} catch (IOException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//				
-//				DefaultListModel<MangaDownloaderElement> mangaListModel = new DefaultListModel<>();
-//				for(Manga manga : mangaList.getMangaList()) {
-//					mangaListModel.addElement(manga);
-//				}
-//				fillMangaList();
-			}		
+			}	
 		};
 		worker.execute();
 	}

@@ -1,6 +1,5 @@
 package pl.fejku.model;
 
-import java.awt.print.Book;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +36,11 @@ public class MangaTableModel extends AbstractTableModel {
 	public Object getValueAt(int row, int col) {
         Manga manga = mangaList.get(row);
     	return manga;      
+	}
+	
+	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+		mangaList.get(rowIndex).setArg((String)aValue);
+		fireTableCellUpdated(rowIndex, columnIndex);
 	}
 
 	/*
