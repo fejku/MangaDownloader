@@ -13,6 +13,7 @@ public class MangaDownloaderTableCellRenderer extends DefaultTableCellRenderer {
 		if (value instanceof MangaDownloaderElement) {
 			MangaDownloaderElement mangaDownloaderElement = (MangaDownloaderElement) value;
 			setText("<html>"+mangaDownloaderElement.getArg()+mangaDownloaderElement.getName()+"</html>");
+			setOpaque(isSelected ? true : false);
 		}
 		return this;
 	}

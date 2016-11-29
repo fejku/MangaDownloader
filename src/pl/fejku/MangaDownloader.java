@@ -377,9 +377,7 @@ public class MangaDownloader extends JFrame {
 		tabSite.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		tabSite.setFillsViewportHeight(true);
 		tabSite.setTableHeader(null);
-		tabSite.setDefaultRenderer(Site.class, new MangaDownloaderTableCellRenderer() 
-			{{ setOpaque(false); }}
-		);
+		tabSite.setDefaultRenderer(Site.class, new MangaDownloaderTableCellRenderer());
 		tabSite.setShowGrid(false);		
 		siteTableModel = new SiteTableModel();
 		tabSite.setModel(siteTableModel);
@@ -431,9 +429,7 @@ public class MangaDownloader extends JFrame {
 		tabManga.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		tabManga.setFillsViewportHeight(true);
 		tabManga.setTableHeader(null);
-		tabManga.setDefaultRenderer(Manga.class, new MangaDownloaderTableCellRenderer() 
-			{{ setOpaque(false); }}
-		);
+		tabManga.setDefaultRenderer(Manga.class, new MangaDownloaderTableCellRenderer());
 		tabManga.setShowGrid(false);		
 		mangaTableModel = new MangaTableModel();
 		tabManga.setModel(mangaTableModel);
@@ -501,9 +497,7 @@ public class MangaDownloader extends JFrame {
 		tabChapter.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		tabChapter.setFillsViewportHeight(true);
 		tabChapter.setTableHeader(null);
-		tabChapter.setDefaultRenderer(Chapter.class, new MangaDownloaderTableCellRenderer()
-			{{ setOpaque(false); }}
-		);
+		tabChapter.setDefaultRenderer(Chapter.class, new MangaDownloaderTableCellRenderer());
 		tabChapter.setShowGrid(false);
 		tabChapter.setOpaque(false);
 		scrPnlChapter.setViewportView(tabChapter);
