@@ -133,6 +133,12 @@ public class MangaDownloader extends JFrame {
 				}	
 				
 				for(Page page: chapter.getPages()) {
+//					GetChapterWorker getChapterWorker = new GetChapterWorker(page, tabChapter.getModel(), chapter);
+//					getChapterWorker.setPageNr(pageNr);
+//					getChapterWorker.setPath(path);
+//					getChapterWorker.setRow(row);
+//					getChapterWorker.setColumn(column);
+//					getChapterWorker.execute();
 					SwingWorker<Void, String> w = new SwingWorker<Void, String>() {
 						boolean isDone = false;
 						@Override
