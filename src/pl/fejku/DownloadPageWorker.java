@@ -10,26 +10,22 @@ import pl.fejku.model.Chapter;
 import pl.fejku.model.Page;
 import pl.fejku.utils.Util;
 
-public class GetChapterWorker extends SwingWorker<Void, String> {
+public class DownloadPageWorker extends SwingWorker<Void, String> {
 	
 	private Page page;
-	private TableModel tableModel;
+	private TableModel chapterModel;
 	private Chapter chapter;
-	private int pageNr;
+	private static int pageNr;
 	private String path;
 	private int row;
 	private int column;
 	private boolean isDone;
 	
-	public GetChapterWorker(Page page, TableModel tableModel, Chapter chapter) {
+	public DownloadPageWorker(Page page, TableModel chapterModel, Chapter chapter) {
 		this.page = page;
-		this.tableModel = tableModel;
+		this.chapterModel = chapterModel;
 		this.chapter = chapter;
 		isDone = false;
-	}
-
-	public void setPageNr(int pageNr) {
-		this.pageNr = pageNr;
 	}
 
 	public void setPath(String path) {
@@ -56,17 +52,17 @@ public class GetChapterWorker extends SwingWorker<Void, String> {
 	@Override
 	protected void process(List<String> chunks) {
 		if (!isDone) {
-			pageNr += chunks.size();
-			tableModel.setValueAt(
+			pageNr++;
+			chapterModel.setValueAt(
 					"<font color=#6272a4><b>"+pageNr+"/"+chapter.getPageAmount()+"</b></font> ",
-					row, column);
+					row, column);			
 		}
 	}
 	
 	@Override
 	protected void done() {
 		if (pageNr == chapter.getPageAmount()) {
-			tableModel.setValueAt("<font color=#54af54><b>OK</b></font> ", 
+			chapterModel.setValueAt("<font color=#54af54><b>OK</b></font> ", 
 					row, column);
 			isDone = true;
 		}

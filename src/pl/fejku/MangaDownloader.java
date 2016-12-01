@@ -109,72 +109,10 @@ public class MangaDownloader extends JFrame {
 	}
 	
 	
-	private void doPickChapter(int row, int column) {
-		
-		SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
-			int pageNr = 0;
-			
-			@Override
-			protected Void doInBackground() throws Exception {
-				
-				Chapter chapter = (Chapter)tabChapter.getModel().getValueAt(row, column);
-				
-				String mangaName = chapter.getLink().split("/")[4];				
-				mangaName = mangaName.replaceAll("_", " ");
-				mangaName = StringUtils.capitalize(mangaName);
-				mangaName = mangaName.replaceAll("[^a-zA-Z0-9- ]", "");
-				String chapterName = chapter.getName().replaceAll("[^a-zA-Z0-9- ]", "");
-				String path = mangaName + "/" + chapterName; 
-
-				if (Util.createFolders(path) == false) {
-					tabChapter.getModel().setValueAt("<font color=#54af54><b>OK</b></font> ", 
-							row, column);
-					return null;						
-				}	
-				
-				for(Page page: chapter.getPages()) {
-//					GetChapterWorker getChapterWorker = new GetChapterWorker(page, tabChapter.getModel(), chapter);
-//					getChapterWorker.setPageNr(pageNr);
-//					getChapterWorker.setPath(path);
-//					getChapterWorker.setRow(row);
-//					getChapterWorker.setColumn(column);
-//					getChapterWorker.execute();
-					SwingWorker<Void, String> w = new SwingWorker<Void, String>() {
-						boolean isDone = false;
-						@Override
-						protected Void doInBackground() throws Exception {
-							String fileExtansion = page.getImageUrl().substring(page.getImageUrl().lastIndexOf("."));
-							String fileName = page.getPageNr() + fileExtansion;
-							Util.saveFile(path, fileName, page.getImageUrl());
-							publish("");
-							return null;
-						}
-
-						@Override
-						protected void process(List<String> chunks) {
-							if (!isDone) {
-								pageNr = pageNr + chunks.size();
-								tabChapter.getModel().setValueAt(
-										"<font color=#6272a4><b>"+pageNr+"/"+chapter.getPageAmount()+"</b></font> ",
-										row, column);
-							}
-						}
-						
-						@Override
-						protected void done() {
-							if (pageNr == chapter.getPageAmount()) {
-								tabChapter.getModel().setValueAt("<font color=#54af54><b>OK</b></font> ", 
-										row, column);
-								isDone = true;
-							}
-						}						
-					};
-					w.execute();					
-				}				
-				return null;
-			}
-		};
-		worker.execute();
+	private void doPickChapter(int row, int column) {		
+		DownloadChapterWorker downloadChapterWorker = new DownloadChapterWorker(tabChapter.getModel());
+		downloadChapterWorker.setRow(row);
+		downloadChapterWorker.execute();
 	}
 	
 	private void doPickManga() {		
